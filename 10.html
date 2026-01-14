@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독도 역사 및 주권 타임라인 (History of Dokdo)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals with Indigo Authority -->
+    <!-- Application Structure Plan: 
+         1. Dashboard Header: Intro and context.
+         2. Visual Analytics: Two charts (Frequency over time, Type of Evidence) to give a high-level overview of the dataset before diving into details.
+         3. Interactive Controls: Filters for eras and search to manage the long list of data.
+         4. Timeline Flow: A vertical timeline (left) paired with detailed cards (right) to allow linear reading or specific data lookup.
+         This structure transforms a flat list into an explorative historical journey.
+    -->
+    <!-- Visualization & Content Choices:
+         - Bar Chart: To show the density of historical records in different centuries (Goal: Inform/Compare).
+         - Doughnut Chart: To categorize the types of documents (Maps, Official Decrees, etc.) (Goal: Organize/Inform).
+         - Vertical Timeline: Standard historical presentation (Goal: Change/Flow).
+         - NO SVG/Mermaid used. Unicode icons used for visual cues.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+        }
+
+        /* Chart Container Styling per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Timeline connector line */
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 15px;
+            width: 2px;
+            background: #e5e7eb; /* gray-200 */
+            z-index: 0;
+        }
+
+        .timeline-node {
+            z-index: 10;
+        }
+
+        /* Custom Scrollbar for card list */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-stone-800 antialiased">
+
+    <!-- App Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Home Button -->
+        <div class="flex justify-start mb-6">
+            <a href="index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border border-stone-200 text-stone-600 hover:text-slate-800 hover:border-slate-300 transition-all text-sm font-medium">
+                <span>🏠</span> 홈으로
+            </a>
+        </div>
+
+        <!-- Header Section -->
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-slate-800 mb-4">독도: 역사와 주권의 기록</h1>
+            <p class="text-lg text-stone-600 max-w-3xl mx-auto leading-relaxed">
+                이 인터랙티브 타임라인은 15세기부터 현대에 이르기까지 독도가 한국의 영토임을 입증하는 주요 역사적 사건과 사료를 시각화한 것입니다.
+                고지도, 정부 문서, 그리고 국제 조약을 통해 독도의 역사를 탐험해 보세요.
+            </p>
+        </header>
+
+        <!-- Dashboard / Visualizations -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            
+            <!-- Chart 1: Temporal Distribution -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                        <span>📊</span> 시대별 기록 빈도
+                    </h2>
+                    <p class="text-sm text-stone-500 mt-1">
+                        각 세기별 주요 사건 및 기록의 분포를 보여줍니다. 20세기 이후 영유권 갈등과 수호 활동이 집중된 것을 확인할 수 있습니다.
+                    </p>
+                </div>
+                <div class="w-full flex flex-col justify-center items-center">
+                    <div class="chart-container">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart 2: Evidence Type -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                        <span>📜</span> 사료 및 근거 유형
+                    </h2>
+                    <p class="text-sm text-stone-500 mt-1">
+                        역사적 기록물의 성격을 분석합니다. 한국의 문헌뿐만 아니라 일본의 공식 문서가 포함되어 있다는 점이 중요합니다.
+                    </p>
+                </div>
+                <div class="w-full flex flex-col justify-center items-center">
+                    <div class="chart-container">
+                        <canvas id="sourceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Controls -->
+        <section class="bg-white sticky top-0 z-30 p-4 rounded-lg shadow-md border border-stone-200 mb-8 transition-all duration-300" id="control-bar">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                
+                <!-- Era Filters -->
+                <div class="flex flex-wrap gap-2 justify-center md:justify-start" id="filter-container">
+                    <button class="filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-colors bg-slate-800 text-white hover:bg-slate-700" data-filter="all">
+                        전체 보기
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-stone-100 text-stone-600 hover:bg-stone-200" data-filter="pre-1900">
+                        조선/대한제국 (~1899)
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-stone-100 text-stone-600 hover:bg-stone-200" data-filter="1900-1950">
+                        근대/일제강점기 (1900~1950)
+                    </button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-stone-100 text-stone-600 hover:bg-stone-200" data-filter="modern">
+                        현대 (1951~)
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div class="w-full md:w-auto relative">
+                    <span class="absolute left-3 top-2.5 text-stone-400">🔍</span>
+                    <input type="text" id="searchInput" placeholder="검색 (예: 안용복, 칙령, 조약)" 
+                        class="w-full md:w-64 pl-10 pr-4 py-2 bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 text-sm">
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content: Timeline & Cards -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left: Timeline Navigation (Visual) -->
+            <div class="lg:col-span-12">
+                <div class="relative timeline-line pl-2" id="timeline-container">
+                    <!-- Dynamic Content Will Be Injected Here -->
+                </div>
+                
+                <div id="no-results" class="hidden text-center py-10 bg-white rounded-lg border border-dashed border-stone-300">
+                    <p class="text-stone-500 text-lg">검색 결과가 없습니다.</p>
+                    <button onclick="resetFilters()" class="mt-2 text-blue-600 hover:underline text-sm">필터 초기화</button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 border-t border-stone-200 pt-8 text-center text-stone-500 text-sm">
+            <p>데이터 출처: 제공된 독도 역사 및 관련 사료 정리 문서.</p>
+            <p class="mt-2">&copy; 2026 Dokdo History Interactive Visualization.</p>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data Source ---
+        const rawData = [
+            { year: 1454, event: "세종실록지리지 기록", desc: "독도가 울진현 정동쪽 바다에 있으며, 울릉도와 멀지 않아 맑은 날 볼 수 있다고 기록됨.", source: "세종실록지리지 [1]", type: "korea_record" },
+            { year: 1481, event: "팔도총도 제작", desc: "동해상에 울릉도와 우산도(독도) 두 섬을 명확히 표기.", source: "팔도총도 [2]", type: "map" },
+            { year: 1531, event: "신증동국여지승람", desc: "우산도와 울릉도가 울진현 소속임을 기술.", source: "신증동국여지승람 [1]", type: "korea_record" },
+            { year: 1667, event: "은주시청합기", desc: "일본 오키섬을 경계로 설정하여 독도와 울릉도를 조선 땅으로 인식 (일본 문헌).", source: "은주시청합기 [3, 4]", type: "japan_record" },
+            { year: 1693, event: "1차 안용복 사건", desc: "안용복이 일본 어부들에게 납치된 후 독도가 조선 영토임을 강력히 주장.", source: "성호사설 등 [5]", type: "conflict" },
+            { year: 1695, event: "돗토리번 답변서", desc: "일본 돗토리번이 울릉도와 독도가 본국 소속이 아님을 에도 막부에 공식 답변.", source: "돗토리번 답변서 [6, 7]", type: "japan_record" },
+            { year: 1696, event: "울릉도 도해 금지령", desc: "안용복의 2차 도일 및 일본 막부의 '죽도(울릉도) 도해 금지령' 하달.", source: "원록9병자년 조선주착안 일권지각서 [6, 7]", type: "japan_record" },
+            { year: 1697, event: "수토관 제도 시행", desc: "조선 정부가 3년에 한 번씩 독도 주변을 시찰하는 제도 신설 (1894년까지 유지).", source: "수토관 제도 [7]", type: "korea_record" },
+            { year: 1779, event: "개정 일본여지로정전도", desc: "울릉도와 독도를 일본 영역 밖의 섬으로 나타냄 (일본 지도).", source: "개정 일본여지로정전도 [2]", type: "map" },
+            { year: 1785, event: "삼국접양지도", desc: "울릉도와 독도를 조선과 같은 황색으로 칠하고 '조선의 것'이라 명기 (하야시 시헤이).", source: "삼국접양지도 [8]", type: "map" },
+            { year: 1808, event: "만기요람 기록", desc: "'우산은 왜인들이 말하는 송도(독도)이다'라고 기록하여 독도 명칭 관계 명확화.", source: "만기요람 [9]", type: "korea_record" },
+            { year: 1870, event: "조선국 교제시말 내탐서", desc: "일본 외무성 관료들이 독도가 조선 영토가 된 사정을 보고.", source: "조선국 교제시말 내탐서 [4]", type: "japan_record" },
+            { year: 1877, event: "태정관 지령", desc: "일본 최고 행정기관(태정관)이 독도와 울릉도가 일본과 관계없음을 최종 결정.", source: "태정관 지령 [4, 10]", type: "japan_record" },
+            { year: 1900, event: "대한제국 칙령 제41호", desc: "독도(석도)를 울도군 관할 구역으로 명문화하여 국제적으로 영유권 선포.", source: "대한제국 칙령 제41호 [9]", type: "korea_record" },
+            { year: 1905, event: "시마네현 고시 제40호", desc: "일본 시마네현이 러일전쟁 중 독도를 자국 영토로 불법 편입 고시.", source: "시마네현 고시 제40호 [2, 10]", type: "conflict" },
+            { year: 1906, event: "대한제국 지령 제3호", desc: "일본의 영지 주장에 대해 대한제국 의정부가 '근거 없음'을 명시.", source: "지령 제3호 [3]", type: "korea_record" },
+            { year: 1946, event: "SCAPIN 제677호", desc: "전후 연합군최고사령관 지령으로 일본의 통치 범위에서 독도를 제외하여 한국 영토로 표시.", source: "SCAPIN 제677호 [11, 12]", type: "international" },
+            { year: 1947, event: "샌프란시스코 강화조약 1차 초안", desc: "강화조약 초기 초안에 독도를 한국에 반환할 영토로 명기.", source: "샌프란시스코 강화조약 1차 초안 [12]", type: "international" },
+            { year: 1951, event: "샌프란시스코 강화조약 최종안", desc: "일본이 한국 독립을 인정하고 제주도, 울릉도 등 한국 섬에 대한 권리 포기 (독도가 한국영토에 포함됨을 전제).", source: "샌프란시스코 강화조약 최종안 [13]", type: "international" },
+            { year: 1952, event: "평화선 선언", desc: "이승만 대통령이 독도를 포함한 해역에 대한 주권 행사와 어족 자원 보호를 위해 평화선 선언.", source: "평화선(이승만 라인) [13, 14]", type: "korea_record" },
+            { year: 1953, event: "독도의용수비대 결성", desc: "일본의 불법 침투에 대응해 홍순칠 등 민간인들이 자발적으로 조직하여 독도 수호.", source: "독도의용수비대 [15, 16]", type: "conflict" },
+            { year: 1965, event: "한일기본조약", desc: "한일 국교 정상화 시 영유권 주장을 병행하되 현재의 점유를 유지하기로 합의 (독도 밀약설).", source: "한일기본조약 및 독도 밀약 [17]", type: "international" },
+            { year: 1981, event: "최초 주민 등록", desc: "최종덕 씨가 서도에 거주시설을 짓고 주민등록을 이전하여 독도를 유인도로 만듦.", source: "최초 주민 최종덕 [18]", type: "korea_record" },
+            { year: 1998, event: "신한일 어업협정", desc: "배타적 경제수역(EEZ) 중첩으로 독도 주변을 중간수역으로 설정.", source: "신한일 어업협정 [19, 20]", type: "international" },
+            { year: 2005, event: "다케시마의 날 제정", desc: "시마네현의 조례 제정으로 한일 역사 갈등 및 영유권 분쟁 재점화.", source: "다케시마의 날 제정 [21]", type: "conflict" },
+            { year: 2006, event: "노무현 대통령 특별담화", desc: "독도 문제에 대한 강력한 수호 의지와 역사적 정당성 천명.", source: "노무현 대통령 특별담화 [22]", type: "korea_record" },
+            { year: 2011, event: "일본 교과서 왜곡 심화", desc: "일본 중학교 및 초등학교 교과서에 '독도 고유 영토' 및 '불법 점거' 기술 급증.", source: "일본 교과서 왜곡 [23-25]", type: "conflict" }
+        ];
+
+        // --- State Management ---
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // --- Helper Functions ---
+        function getEra(year) {
+            if (year < 1900) return 'pre-1900';
+            if (year >= 1900 && year <= 1950) return '1900-1950';
+            return 'modern';
+        }
+
+        function getCategoryLabel(type) {
+            const map = {
+                'korea_record': '한국 기록/정책',
+                'japan_record': '일본 문헌/인정',
+                'map': '고지도',
+                'conflict': '분쟁/수호 활동',
+                'international': '국제 조약/협정'
+            };
+            return map[type] || '기타';
+        }
+
+        function getCategoryColor(type) {
+             const map = {
+                'korea_record': '#3b82f6', // blue-500
+                'japan_record': '#ef4444', // red-500
+                'map': '#eab308', // yellow-500
+                'conflict': '#f97316', // orange-500
+                'international': '#8b5cf6' // violet-500
+            };
+            return map[type] || '#94a3b8';
+        }
+
+        function getCategoryIcon(type) {
+             const map = {
+                'korea_record': '📘',
+                'japan_record': '📕',
+                'map': '🗺️',
+                'conflict': '⚔️',
+                'international': '⚖️'
+            };
+            return map[type] || '📄';
+        }
+
+        // --- DOM Rendering ---
+        const timelineContainer = document.getElementById('timeline-container');
+        const noResults = document.getElementById('no-results');
+
+        function renderTimeline() {
+            timelineContainer.innerHTML = '';
+            
+            const filteredData = rawData.filter(item => {
+                const matchesFilter = currentFilter === 'all' || getEra(item.year) === currentFilter;
+                const matchesSearch = item.event.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                      item.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      item.year.toString().includes(searchQuery);
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredData.length === 0) {
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                noResults.classList.add('hidden');
+            }
+
+            filteredData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "timeline-item relative pl-8 pb-10 group";
+                
+                // Colors for border and dots based on type
+                const color = getCategoryColor(item.type);
+                const icon = getCategoryIcon(item.type);
+                const label = getCategoryLabel(item.type);
+
+                card.innerHTML = `
+                    <!-- Node Dot -->
+                    <div class="timeline-node absolute left-0 top-0 w-8 h-8 rounded-full border-4 border-stone-100 flex items-center justify-center text-sm shadow-md transition-transform transform group-hover:scale-110" style="background-color: ${color}; color: white; border-color: #f5f5f4;">
+                        ${icon}
+                    </div>
+
+                    <!-- Card Content -->
+                    <div class="bg-white rounded-lg shadow-sm border border-stone-200 p-5 hover:shadow-md transition-shadow cursor-default">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 border-b border-stone-100 pb-2">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl font-bold text-slate-700 font-mono">${item.year}년</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-semibold bg-stone-100 text-stone-600 border border-stone-200">${label}</span>
+                            </div>
+                            <div class="text-xs text-stone-400 mt-1 sm:mt-0 font-mono">
+                                근거: ${item.source}
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">${item.event}</h3>
+                        <p class="text-stone-600 leading-relaxed">
+                            ${item.desc}
+                        </p>
+                    </div>
+                `;
+                timelineContainer.appendChild(card);
+            });
+        }
+
+        function resetFilters() {
+            currentFilter = 'all';
+            searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            updateFilterButtons();
+            renderTimeline();
+            updateCharts();
+        }
+
+        // --- Chart Logic ---
+        let timelineChartInstance = null;
+        let sourceChartInstance = null;
+
+        function initCharts() {
+            // Chart 1: Timeline Frequency
+            const ctx1 = document.getElementById('timelineChart').getContext('2d');
+            
+            // Initial data process for charts (always shows full dataset context usually, but let's make it reactive)
+            // Actually, keeping charts showing global stats is better for "Dashboard" feel, 
+            // but highlighting the active era is nice. Let's show all data.
+            
+            // Group by Century/Era
+            const eras = { '1400-1600': 0, '1601-1800': 0, '1801-1900': 0, '1901-1950': 0, '1951-현재': 0 };
+            rawData.forEach(d => {
+                if (d.year <= 1600) eras['1400-1600']++;
+                else if (d.year <= 1800) eras['1601-1800']++;
+                else if (d.year <= 1900) eras['1801-1900']++;
+                else if (d.year <= 1950) eras['1901-1950']++;
+                else eras['1951-현재']++;
+            });
+
+            timelineChartInstance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(eras),
+                    datasets: [{
+                        label: '기록/사건 수',
+                        data: Object.values(eras),
+                        backgroundColor: '#475569', // slate-600
+                        borderRadius: 4,
+                        hoverBackgroundColor: '#1e293b'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.raw}건의 주요 기록`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Chart 2: Source Type
+            const ctx2 = document.getElementById('sourceChart').getContext('2d');
+            const typeCounts = {};
+            rawData.forEach(d => {
+                typeCounts[d.type] = (typeCounts[d.type] || 0) + 1;
+            });
+
+            sourceChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(typeCounts).map(getCategoryLabel),
+                    datasets: [{
+                        data: Object.values(typeCounts),
+                        backgroundColor: Object.keys(typeCounts).map(getCategoryColor),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { family: "'Noto Sans KR', sans-serif" }, boxWidth: 12 } }
+                    }
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderTimeline();
+        });
+
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        function updateFilterButtons() {
+            filterBtns.forEach(btn => {
+                if(btn.dataset.filter === currentFilter) {
+                    btn.classList.remove('bg-stone-100', 'text-stone-600');
+                    btn.classList.add('bg-slate-800', 'text-white');
+                } else {
+                    btn.classList.add('bg-stone-100', 'text-stone-600');
+                    btn.classList.remove('bg-slate-800', 'text-white');
+                }
+            });
+        }
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentFilter = btn.dataset.filter;
+                updateFilterButtons();
+                renderTimeline();
+            });
+        });
+
+        // --- Initialization ---
+        initCharts();
+        renderTimeline();
+
+    </script>
+</body>
+</html>
