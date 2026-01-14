@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독도: 역사와 주권의 기록 | Interactive Archive</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            200: '#e7e5e4',
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        ocean: {
+                            deep: '#1e3a8a',
+                            mid: '#3b82f6',
+                            light: '#bfdbfe',
+                        },
+                        paper: {
+                            DEFAULT: '#fdfbf7',
+                            dark: '#f0e6d2'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'sans-serif'],
+                        serif: ['Batang', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles for Chart Container per Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px; /* Constraints for readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px; /* Base height */
+            max-height: 50vh;
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px; /* Adjust for mobile */
+            }
+        }
+
+        /* Transition Utilities */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af; 
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #1e3a8a;
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            border-bottom: 2px solid transparent;
+            color: #6b7280;
+        }
+        .tab-inactive:hover {
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        /* Card Hover Effects */
+        .term-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .term-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans leading-relaxed selection:bg-ocean-light selection:text-ocean-deep">
+
+    <!-- Main App Wrapper -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
+        
+        <!-- Home Button -->
+        <div class="w-full flex justify-start mb-2 fade-in">
+            <a href="index.html" class="inline-flex items-center px-3 py-2 bg-white border border-stone-200 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-50 hover:text-ocean-deep hover:border-ocean-light transition-all shadow-sm">
+                <span class="mr-1">🏠</span> 홈으로
+            </a>
+        </div>
+
+        <!-- Header Section -->
+        <header class="mb-10 text-center fade-in">
+            <div class="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-wider text-ocean-deep uppercase bg-blue-50 rounded-full border border-blue-100">
+                Dokdo Interactive Archive
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-4 text-stone-900 font-serif">
+                독도: 역사와 주권의 기록
+            </h1>
+            <p class="max-w-2xl mx-auto text-lg text-stone-600">
+                이 인터랙티브 가이드는 독도의 지리적 가치, 역사적 명칭의 변천사, 그리고 독도를 지켜온 사람들의 이야기를 탐구합니다. 아래 탭을 선택하여 관련 자료를 살펴보세요.
+            </p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex flex-wrap justify-center gap-6 mb-8 border-b border-stone-200" role="tablist">
+            <button onclick="app.navigate('geography')" id="nav-geography" class="pb-3 text-sm md:text-base font-medium transition-colors duration-200 tab-active">
+                영역과 지리
+            </button>
+            <button onclick="app.navigate('history')" id="nav-history" class="pb-3 text-sm md:text-base font-medium transition-colors duration-200 tab-inactive">
+                역사의 흐름 (Timeline)
+            </button>
+            <button onclick="app.navigate('people')" id="nav-people" class="pb-3 text-sm md:text-base font-medium transition-colors duration-200 tab-inactive">
+                독도의 사람들
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="app-content" class="flex-grow relative">
+            <!-- Dynamic Content Injected Here -->
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 pt-6 border-t border-stone-200 text-center text-sm text-stone-400">
+            <p>&copy; 2024 Dokdo Digital Archive. Based on provided source material.</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- DATA STORE ---
+        const dokdoData = {
+            geography: [
+                { term: "영토", def: "국가의 주권이 미치는 지표상의 범위를 의미합니다.", category: "sovereignty", ref: "[1]" },
+                { term: "영해", def: "해안선(기선)으로부터 일정한 범위(보통 12해리, 약 22km) 내에 있는 바다입니다.", category: "sovereignty", ref: "[1]" },
+                { term: "영공", def: "영토와 영해의 수직 상공으로, 보통 대기권 이내의 범위를 말합니다.", category: "sovereignty", ref: "[1]" },
+                { term: "배타적 경제수역(EEZ)", def: "영해 바깥쪽 기선에서 200해리까지의 수역으로, 연안국이 해양 자원의 탐사·개발·보전 등에 대해 경제적 주권을 갖는 영역입니다.", category: "sovereignty", ref: "[1], [2]" },
+                { term: "가스 하이드레이트", def: "심해저의 저온·고압 상태에서 천연가스가 물과 결합해 만들어진 고체 에너지원으로, 독도 부근에 대량 매장되어 있어 '불타는 얼음'이라 불립니다.", category: "resource", ref: "[3]" },
+                { term: "해산", def: "바다 밑에 솟아 있는 산으로, 울릉도와 독도는 해저에서 서로 연결된 형태를 띠고 있습니다.", category: "geography", ref: "[4], [5]" }
+            ],
+            history: [
+                // Names
+                { year: 512, type: "Name", label: "우산도(于山島)", desc: "삼국시대 우산국에서 유래한 명칭으로, 한국 사료에서 독도를 가리키는 가장 오래된 이름 중 하나입니다.", ref: "[6]", sortYear: 512 },
+                { year: 1700, type: "Name", label: "가지도(可支島)", desc: "강치(가재)가 많이 사는 섬이라는 뜻에서 붙여진 명칭입니다.", ref: "[6]", sortYear: 1750 }, // Approx mid-joseon
+                { year: 1849, type: "Name", label: "리앙쿠르암", desc: "1849년 프랑스 포경선 리앙쿠르호가 독도를 발견하고 명명한 이름으로, 서양에 독도가 알려진 주요 명칭입니다.", ref: "[7], [9]", sortYear: 1849 },
+                { year: 1880, type: "Name", label: "송도(松島)", desc: "과거 일본에서 독도를 부르던 명칭이나, 메이지 정부 시기 울릉도와 혼동하여 사용하기도 했습니다.", ref: "[7], [8]", sortYear: 1880 },
+                { year: 1900, type: "Name", label: "석도(石島)", desc: "'돌섬'을 한자로 표기한 것으로, 대한제국 칙령 제41호에서 독도를 지칭할 때 사용되었습니다.", ref: "[6], [1]", sortYear: 1900 },
+                
+                // Documents & Events
+                { year: 1454, type: "Document", label: "세종실록지리지", desc: "1454년 편찬된 지리지로, 울릉도와 독도 두 섬이 서로 멀지 않아 날씨가 맑으면 육안으로 볼 수 있다고 기록되어 있습니다.", ref: "[8]", sortYear: 1454 },
+                { year: 1696, type: "Person", label: "안용복", desc: "17세기 후반 일본으로 건너가 울릉도와 독도가 조선의 영토임을 확약받고 일본 어부의 침범을 항의한 인물입니다.", ref: "[12], [13]", sortYear: 1696 },
+                { year: 1877, type: "Document", label: "태정관 지령", desc: "1877년 일본 최고 행정기관인 태정관이 울릉도와 독도는 일본과 관계가 없음을 내무성에 하달한 공식 지령입니다.", ref: "[4], [5]", sortYear: 1877 },
+                { year: 1900, type: "Document", label: "대한제국 칙령 제41호", desc: "1900년 고종 황제가 공포한 법령으로, 독도를 울도군(울릉도)의 관할 구역으로 명문화하여 영유권을 선포했습니다.", ref: "[1]", sortYear: 1900 },
+                { year: 1905, type: "Document", label: "시마네현 고시 제40호", desc: "1905년 일본 시마네현이 독도를 자국 영토로 불법 편입한다고 발표한 고시입니다.", ref: "[5], [3]", sortYear: 1905 },
+                { year: 1946, type: "Document", label: "SCAPIN 제677호", desc: "1946년 연합군최고사령관이 일본의 행정 범위에서 독도를 제외하여 한국의 영토로 표시한 지령입니다.", ref: "[10], [9]", sortYear: 1946 },
+                { year: 1951, type: "Document", label: "샌프란시스코 강화조약", desc: "1951년 연합국과 일본이 체결한 조약으로, 일본이 한국의 독립을 인정하고 제주도, 울릉도, 거문도 등에 대한 권리를 포기할 것을 명시했습니다.", ref: "[9], [11]", sortYear: 1951 },
+                { year: 1953, type: "Group", label: "독도의용수비대/경비대", desc: "1950년대 초 민간인들이 조직한 의용수비대와, 1953년부터 상시 주둔 중인 경찰 조직입니다.", ref: "[12], [13]", sortYear: 1953 },
+                { year: 1968, type: "Person", label: "최종덕", desc: "1968년부터 독도에 거주하며 1981년 주민등록을 이전한 최초의 독도 주민입니다.", ref: "[14]", sortYear: 1968 },
+                { year: 2000, type: "Group", label: "독도수호대", desc: "2000년 창설된 시민단체로, 10월 25일을 '독도의 날'로 제정하는 등 독도 바로 알기 활동을 전개하고 있습니다.", ref: "[9]", sortYear: 2000 }
+            ],
+            people: [
+                { name: "안용복", role: "민간 외교가", desc: "17세기 후반 일본으로 건너가 울릉도와 독도가 조선의 영토임을 확약받고 일본 어부의 침범을 항의한 인물입니다.", ref: "[12], [13]" },
+                { name: "독도의용수비대", role: "민간 수비 조직", desc: "1950년대 초 한국전쟁의 혼란을 틈탄 일본의 침투에 맞서 민간인들이 자발적으로 조직하여 독도를 지킨 단체입니다.", ref: "[12]" },
+                { name: "독도경비대", role: "공식 경찰 조직", desc: "1953년부터 독도에 상시 주둔하며 영토를 수호하고 있는 경찰 조직입니다.", ref: "[13]" },
+                { name: "최종덕", role: "최초의 주민", desc: "1968년부터 독도에 거주하며 1981년 주민등록을 이전한 최초의 독도 주민입니다.", ref: "[14]" },
+                { name: "독도수호대", role: "시민단체", desc: "2000년 창설된 시민단체로, 10월 25일을 '독도의 날'로 제정하는 등 독도 바로 알기 활동을 전개하고 있습니다.", ref: "[9]" }
+            ]
+        };
+
+        // --- APP STATE & LOGIC ---
+        const app = {
+            state: {
+                currentView: 'geography',
+                chartInstance: null
+            },
+
+            navigate: (viewId) => {
+                app.state.currentView = viewId;
+                
+                // Update Nav UI
+                ['geography', 'history', 'people'].forEach(id => {
+                    const el = document.getElementById(`nav-${id}`);
+                    if (id === viewId) {
+                        el.className = "pb-3 text-sm md:text-base font-medium transition-colors duration-200 tab-active";
+                    } else {
+                        el.className = "pb-3 text-sm md:text-base font-medium transition-colors duration-200 tab-inactive";
+                    }
+                });
+
+                // Render Content
+                const content = document.getElementById('app-content');
+                content.innerHTML = '';
+                
+                if (viewId === 'geography') app.renderGeography(content);
+                else if (viewId === 'history') app.renderHistory(content);
+                else if (viewId === 'people') app.renderPeople(content);
+            },
+
+            // --- RENDERERS ---
+
+            renderGeography: (container) => {
+                const section = document.createElement('div');
+                section.className = 'fade-in';
+                
+                // Intro
+                section.innerHTML = `
+                    <div class="mb-8 p-6 bg-white rounded-xl shadow-sm border border-stone-200">
+                        <h2 class="text-2xl font-bold text-stone-900 mb-3">대한민국의 주권과 영토</h2>
+                        <p class="text-stone-600">
+                            독도는 단순히 하나의 섬이 아닙니다. 이곳은 대한민국의 <span class="font-bold text-ocean-deep">영토, 영해, 영공</span>이 시작되는 기점이며, 
+                            풍부한 해양 자원을 보유한 <span class="font-bold text-ocean-deep">배타적 경제수역(EEZ)</span>의 중심입니다. 
+                            이 섹션에서는 독도의 지리적 정의와 가치를 설명합니다.
+                        </p>
+                    </div>
+                `;
+
+                // Grid
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                
+                dokdoData.geography.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'term-card bg-white p-6 rounded-lg border border-stone-200 h-full flex flex-col';
+                    
+                    // Icon logic based on category
+                    let icon = '';
+                    if (item.category === 'sovereignty') icon = '🇰🇷';
+                    else if (item.category === 'resource') icon = '💎';
+                    else icon = '⛰️';
+
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-2xl">${icon}</span>
+                            <h3 class="text-xl font-bold text-stone-800">${item.term}</h3>
+                        </div>
+                        <p class="text-stone-600 text-sm leading-relaxed mb-4 flex-grow">${item.def}</p>
+                        <div class="mt-auto pt-4 border-t border-stone-100 flex justify-between items-center text-xs text-stone-400">
+                            <span class="bg-stone-100 px-2 py-1 rounded">출처 ${item.ref}</span>
+                            <span class="uppercase tracking-wider font-semibold text-stone-300">${item.category}</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(grid);
+                container.appendChild(section);
+            },
+
+            renderHistory: (container) => {
+                const section = document.createElement('div');
+                section.className = 'fade-in';
+                
+                section.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-stone-900 mb-2">역사의 흐름: 기록된 진실</h2>
+                        <p class="text-stone-600 mb-6">
+                            삼국시대부터 현대에 이르기까지, 수많은 문헌과 조약이 독도를 한국의 영토로 기록하고 있습니다. 
+                            아래 <span class="text-ocean-deep font-bold">타임라인 차트의 점을 클릭</span>하여 시기별 명칭의 변화와 주요 국제 문서를 확인하세요.
+                        </p>
+                        
+                        <!-- Chart Container -->
+                        <div class="chart-container flex flex-col items-center justify-center bg-white border border-stone-200 rounded-xl shadow-sm mb-6">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+
+                        <!-- Details Panel (Dynamic) -->
+                        <div id="history-details" class="bg-paper p-6 rounded-xl border border-stone-200 min-h-[150px] flex items-center justify-center text-center transition-all">
+                            <p class="text-stone-400">차트의 데이터를 클릭하면 상세 설명이 여기에 표시됩니다.</p>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(section);
+
+                // Initialize Chart after DOM injection
+                setTimeout(() => app.initChart(), 50);
+            },
+
+            initChart: () => {
+                const ctx = document.getElementById('historyChart').getContext('2d');
+                if (app.state.chartInstance) app.state.chartInstance.destroy();
+
+                const dataPoints = dokdoData.history.map(item => ({
+                    x: item.sortYear,
+                    y: item.type === 'Name' ? 3 : item.type === 'Document' ? 2 : 1, // Y-axis categories
+                    label: item.label,
+                    description: item.desc,
+                    ref: item.ref,
+                    raw: item
+                }));
+
+                app.state.chartInstance = new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: '독도 역사 데이터',
+                            data: dataPoints,
+                            backgroundColor: (ctx) => {
+                                const type = ctx.raw?.raw?.type;
+                                if (type === 'Name') return '#3b82f6'; // Blue for Names
+                                if (type === 'Document') return '#d97706'; // Amber for Docs
+                                return '#10b981'; // Emerald for People/Events
+                            },
+                            pointRadius: 8,
+                            pointHoverRadius: 12,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                position: 'bottom',
+                                min: 400,
+                                max: 2030,
+                                title: { display: true, text: '연도 (Year)' },
+                                ticks: {
+                                    callback: function(value) { return value; } 
+                                }
+                            },
+                            y: {
+                                min: 0,
+                                max: 4,
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: function(value) {
+                                        if (value === 3) return '역사적 명칭';
+                                        if (value === 2) return '문헌 및 조약';
+                                        if (value === 1) return '인물 및 사건';
+                                        return '';
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.raw.x}년: ${context.raw.label}`;
+                                    }
+                                }
+                            },
+                            legend: { display: false },
+                            annotation: {
+                                // Simple annotations could be added here if plugin available, but kept simple for vanilla Chart.js
+                            }
+                        },
+                        onClick: (e, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const data = dataPoints[index];
+                                app.showHistoryDetail(data);
+                            }
+                        }
+                    }
+                });
+            },
+
+            showHistoryDetail: (data) => {
+                const panel = document.getElementById('history-details');
+                panel.className = "bg-white p-6 rounded-xl border-l-4 border-ocean-mid shadow-md text-left fade-in";
+                
+                let badgeColor = "bg-stone-100 text-stone-600";
+                if(data.raw.type === 'Name') badgeColor = "bg-blue-100 text-blue-800";
+                if(data.raw.type === 'Document') badgeColor = "bg-amber-100 text-amber-800";
+                if(data.raw.type === 'Person' || data.raw.type === 'Group') badgeColor = "bg-emerald-100 text-emerald-800";
+
+                panel.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold ${badgeColor} px-2 py-1 rounded">${data.x}년 - ${data.raw.type}</span>
+                        <span class="text-xs text-stone-400">출처: ${data.ref}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-stone-900 mb-2">${data.label}</h3>
+                    <p class="text-stone-700 leading-relaxed">${data.description}</p>
+                `;
+            },
+
+            renderPeople: (container) => {
+                const section = document.createElement('div');
+                section.className = 'fade-in';
+                
+                section.innerHTML = `
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-stone-900 mb-3">독도를 지키는 사람들</h2>
+                        <p class="text-stone-600 mb-6">
+                            독도의 역사는 주권을 수호하기 위해 헌신한 사람들의 기록이기도 합니다. 
+                            조선시대 안용복부터 현대의 독도경비대까지, 실효적 지배를 증명하는 주역들을 소개합니다.
+                        </p>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+
+                dokdoData.people.forEach(person => {
+                    const card = document.createElement('div');
+                    card.className = 'flex flex-col md:flex-row bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow';
+                    
+                    card.innerHTML = `
+                        <div class="bg-stone-100 w-full md:w-32 flex items-center justify-center p-4">
+                            <div class="text-4xl">👤</div>
+                        </div>
+                        <div class="p-5 flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold text-lg text-stone-900">${person.name}</h3>
+                                <span class="text-xs font-semibold bg-stone-100 text-stone-600 px-2 py-1 rounded">${person.role}</span>
+                            </div>
+                            <p class="text-sm text-stone-600 leading-relaxed mb-3">${person.desc}</p>
+                            <div class="text-xs text-stone-400 text-right">출처 ${person.ref}</div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(grid);
+                container.appendChild(section);
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            app.navigate('geography');
+        });
+
+    </script>
+
+    <!-- Placeholder Comments Required by Prompt -->
+    <!-- Chosen Palette: 'Stone and Ocean' theme. Neutral stone backgrounds (#fafaf9) for a historical/archival feel, combined with Ocean Blue (#1e3a8a, #3b82f6) to represent the East Sea and Dokdo's maritime nature. Semantic colors (Amber, Emerald) used sparingly for data categorization. -->
+    
+    <!-- Application Structure Plan:
+        The SPA ignores the linear list format of the source report to prioritize user exploration.
+        1. **View-Based Architecture:** Instead of scrolling one long page, the content is split into 3 functional tabs: Geography (Definitions), History (Interactive Time-series), and People (Profiles).
+        2. **Visualization-First History:** The 'Historical Names' and 'Major Documents' sections are merged into a unified Timeline Chart. This allows users to see the chronological context of evidence rather than reading disparate tables.
+        3. **Card-Based Definitions:** Geography terms are presented as uniform cards for easy scanning, focusing on the core concept and its definition.
+        4. **Interactive Discovery:** The chart invites clicks to reveal details, fostering active learning rather than passive reading.
+    -->
+
+    <!-- Visualization & Content Choices:
+        1. **History Timeline:** - **Goal:** Organize & Inform. 
+           - **Method:** Chart.js Scatter Plot. 
+           - **Interaction:** Click to reveal details. 
+           - **Justification:** The source contains dates scattered from 512 to 2000. A scatter plot clearly visualizes the density of evidence over time and distinguishes between 'Names', 'Documents', and 'People' via Y-axis categories.
+           
+        2. **Geography Cards:** - **Goal:** Inform. 
+           - **Method:** Tailwind CSS Grid & Card components. 
+           - **Justification:** Clear separation of distinct concepts (EEZ vs Territorial Waters) with visual hierarchy.
+        
+        3. **People Profiles:** - **Goal:** Inform. 
+           - **Method:** List/Grid view with role badges. 
+           - **Justification:** Highlights the human element of the sovereignty claim.
+           
+        (No SVG or Mermaid used as per constraints).
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+</body>
+</html>
